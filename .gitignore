@@ -1,5 +1,7 @@
 __pycache__/
 .vscode/
+log/
 
 ckpt/*.pkl
 data/*
+model/onnx/*onnx
