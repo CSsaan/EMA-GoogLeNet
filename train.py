@@ -171,7 +171,8 @@ if __name__ == "__main__":
     exp = os.path.abspath('.').split('/')[-1]
 
     # 实例化模型
-    model = LoadModel(args.local_rank, args.use_distribute)
+    model_name = 'ViT'
+    model = LoadModel(args.local_rank, model_name, args.use_distribute)
     
     # 断电续练
     epochs = 0

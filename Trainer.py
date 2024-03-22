@@ -8,10 +8,14 @@ from config import *
 
     
 class LoadModel:
-    def __init__(self, local_rank, use_distribute=False):
-        inception_model, googlelenet_model = MODEL_CONFIG['MODEL_TYPE']
-        self.net = googlelenet_model(inception_model)
-        self.name = MODEL_CONFIG['LOGNAME']
+    def __init__(self, local_rank, model_name='GoogLeNet', use_distribute=False):
+        if(model_name =='GoogLeNet'):
+            inception_model, googlelenet_model = MODEL_CONFIG[model_name]
+            self.net = googlelenet_model(inception_model)
+        else:
+            self.net = MODEL_CONFIG[model_name]
+        self.name = model_name
+        print(f'loaded model: {self.name}')
         self.device()
 
         # train
