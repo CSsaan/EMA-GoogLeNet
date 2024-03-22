@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim import AdamW
-from model.loss import *
+from benchmark.loss import *
 from torchsummary import summary
 from config import *
 

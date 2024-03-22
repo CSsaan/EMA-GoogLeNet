@@ -99,7 +99,7 @@ def train(model, reloadModel_epochs, local_rank, batch_size, world_size, data_pa
             'epoch': epoch,
             'progress': '{}/{}'.format(i, args.step_per_epoch),
             'time': '{:.2f}+{:.2f}'.format(data_time_interval, train_time_interval),
-            'loss': '{:.4e}'.format(train_loss.item()/(i+1))
+            'loss': '{:.4f}'.format(train_loss.item()/(i+1))
             }
             pbar_batch.set_postfix(postfix)  
             # if local_rank == 0:
