@@ -16,4 +16,27 @@ git clone git@github.com:CSsaan/EMA-GoogLeNet.git
 cd EMA-GoogLeNet
 conda create -n EMA python=3.8 -y
 conda activate EMA
-pip install -e .
+pip install -r requirements.txt
+
+
+## 📂 Repo structure (WIP)
+```
+├── README.md
+├── Trainer.py                    -> load model & train.
+├── config.py                     -> all models dictionary
+├── dataset.py                    -> dataLoader
+├── demo_Fc.py                    -> model inder
+├── pyproject.toml                ->  project config
+├── requirements.txt
+├── train.py                      -> main
+├── benchmark
+│   ├── loss.py
+│   └── config                    -> all model's parameters
+└── utils
+│   ├── testGPU.py
+│   ├── yuv_frame_io.py
+│   └── print_structure.py
+├── data                          -> dataset
+├── log                           -> tensorboard log
+└── model
+```

@@ -62,7 +62,7 @@ def train(model, reloadModel_epochs, local_rank, batch_size, world_size, data_pa
 
     args.step_per_epoch = train_data.__len__()
 
-    print('training...')
+    print('---------------- training... -----------------------')
     time_stamp = time.time()
     min_loss = 10000
 
@@ -142,6 +142,7 @@ def evaluate(model, val_data, nr_eval, local_rank):
 if __name__ == "__main__":    
     print_cuda()
     parser = argparse.ArgumentParser()
+    parser.add_argument('--use_model', default='ViT', type=str, help='name of model to use')
     parser.add_argument('--reload_model', default=False, type=bool, help='reload model')
     parser.add_argument('--reload_model_name', default='ours_7', type=str, help='name of reload model')
     parser.add_argument('--local_rank', default=0, type=int, help='local rank')
@@ -171,8 +172,7 @@ if __name__ == "__main__":
     exp = os.path.abspath('.').split('/')[-1]
 
     # 实例化模型
-    model_name = 'ViT'
-    model = LoadModel(args.local_rank, model_name, args.use_distribute)
+    model = LoadModel(args.local_rank, args.use_model, args.use_distribute)
     
     # 断电续练
     epochs = 0
