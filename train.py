@@ -50,7 +50,8 @@ def train(model, reloadModel_epochs, local_rank, batch_size, world_size, data_pa
         writer = SummaryWriter('log/train_EMAVFI')
     step_train, step_eval, best = 0, 0, 0
 
-    choose_dataset = 1
+    choose_dataset = 0
+    # TODO: 将matting任务单独建个工程，此工程只进行分类任务
     if(choose_dataset == 0):
         # --------- classification 数据集加载 ------------------
         dataset = load_classification_data('train', data_path)
