@@ -5,7 +5,7 @@ from torch.optim import AdamW
 from benchmark.loss import *
 from torchsummary import summary
 from config import *
-
+import os
     
 class LoadModel:
     def __init__(self, local_rank, model_name='GoogLeNet', use_distribute=False):
@@ -69,7 +69,11 @@ class LoadModel:
     def save_model(self, epoch, rank=0):
         if rank == 0:
             # 仅保存模型
-            torch.save(self.net.state_dict(),f'ckpt/{self.name}_{str(epoch)}_pure.pkl')
+            save_dir = 'ckpt'
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            # 保存模型参数
+            torch.save(self.net.state_dict(), f'{save_dir}/{self.name}_{str(epoch)}_pure.pkl')
             # 支持断点续练
             state = {'model': self.net.state_dict(), 'optimizer': self.optimG.state_dict(), 'epoch': epoch}
             torch.save(state, f'ckpt/{self.name}_{str(epoch)}.pkl')
