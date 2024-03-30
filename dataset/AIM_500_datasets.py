@@ -4,12 +4,21 @@ from torchvision import transforms
 from PIL import Image
 
 class AIM500Dataset(Dataset):
-    def __init__(self, root_dir):
+    def __init__(self, dataset_name, root_dir):
         self.root_dir = root_dir
-        self.image_folder = os.path.join(root_dir, 'original')
-        self.label_folder = os.path.join(root_dir, 'mask')
+        if dataset_name == 'train':
+            self.image_folder = os.path.join(root_dir, 'train', 'original')
+            self.label_folder = os.path.join(root_dir, 'train', 'mask')
+        elif dataset_name == 'test':
+            self.image_folder = os.path.join(root_dir, 'test', 'original')
+            self.label_folder = os.path.join(root_dir, 'test', 'mask')
+        else:
+            raise ValueError("Invalid dataset_name. Choose 'train' or 'test'.")
+        
         self.image_filenames = os.listdir(self.image_folder)
         self.label_filenames = os.listdir(self.label_folder)
+        
+        # Transformations for images and labels
         self.transform_image = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
@@ -26,6 +35,7 @@ class AIM500Dataset(Dataset):
             # transforms.RandomErasing(p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0),  # 如果你需要随机擦除
             # transforms.RandomSizedCrop(224),  # 如果你需要随机大小裁剪
         ])
+        
         self.transform_label = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.5,), (0.5,)),
@@ -39,20 +49,30 @@ class AIM500Dataset(Dataset):
         img_name = os.path.join(self.image_folder, self.image_filenames[idx])
         label_name = os.path.join(self.label_folder, self.label_filenames[idx])
         image = Image.open(img_name).convert('RGB')
-        label = Image.open(label_name).convert('L')  # Assuming label is grayscale
+        label = Image.open(label_name).convert('L')
+        
         image = self.transform_image(image)
         label = self.transform_label(label)
+        
         return image, label
 
 if __name__ == '__main__':
-    # 设定训练数据集路径
-    train_dataset = AIM500Dataset(root_dir='/workspace/EMA-GoogLeNet/data/AIM500')
-    # 设置批量大小和是否随机打乱数据
-    batch_size = 16
+    batch_size = 8
     shuffle = True
-    # 创建 DataLoader
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+
+    # 设定训练数据集路径
+    train_dataset = AIM500Dataset('train', root_dir='/workspace/EMA-GoogLeNet/data/AIM500')
+    # 设置批量大小和是否随机打乱数据
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=4,  pin_memory=True, drop_last=True, shuffle=shuffle)
     # 检查数据加载是否正常工作
     for images, labels in train_loader:
         print(images.shape, labels.shape)
-        # 这里你可以在模型上训练，images 和 labels 分别是图像和相应的标签数据
+    
+    print("-" * 40)
+    # 设定训练数据集路径
+    test_dataset = AIM500Dataset('test', root_dir='/workspace/EMA-GoogLeNet/data/AIM500')
+    # 设置批量大小和是否随机打乱数据
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=4,  pin_memory=True, drop_last=True, shuffle=shuffle)
+    # 检查数据加载是否正常工作
+    for images, labels in test_loader:
+        print(images.shape, labels.shape)

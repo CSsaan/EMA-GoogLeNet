@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np 
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -106,3 +107,38 @@ class Ternary(nn.Module):
         img0 = self.transform(self.rgb2gray(img0))
         img1 = self.transform(self.rgb2gray(img1))
         return self.hamming(img0, img1) * self.valid_mask(img0, 1)
+
+
+class MattingLoss(nn.Module):
+    def __init__(self):
+        super(MattingLoss, self).__init__()
+
+    ## Laplacian loss is refer to 
+    ## https://gist.github.com/MarcoForte/a07c40a2b721739bb5c5987671aa5270
+    def build_gauss_kernel(self, size=5, sigma=1.0, n_channels=1, cuda=False):
+        if size % 2 != 1:
+            raise ValueError("kernel size must be uneven")
+        grid = np.float32(np.mgrid[0:size,0:size].T)
+        gaussian = lambda x: np.exp((x - size//2)**2/(-2*sigma**2))**2
+        kernel = np.sum(gaussian(grid), axis=2)
+        kernel /= np.sum(kernel)
+        kernel = np.tile(kernel, (n_channels, 1, 1))
+        kernel = torch.FloatTensor(kernel[:, None, :, :]).cuda()
+        return Variable(kernel, requires_grad=False)
+
+    def forward(self, predict, alpha):
+        weighted = torch.ones(alpha.shape).cuda()
+        alpha_f = alpha / 255.
+        alpha_f = alpha_f.cuda()
+        diff = predict - alpha_f
+        alpha_loss = torch.sqrt(diff ** 2 + 1e-12)
+        alpha_loss = alpha_loss.sum() / (weighted.sum())
+        
+        alpha_f = alpha_f.cuda()
+        gauss_kernel = self.build_gauss_kernel(size=5, sigma=1.0, n_channels=1, cuda=True)
+        pyr_alpha = laplacian_pyramid(alpha_f, gauss_kernel, 5)
+        pyr_predict = laplacian_pyramid(predict, gauss_kernel, 5)
+        laplacian_loss = sum(nn.L1Loss()(a, b) for a, b in zip(pyr_alpha, pyr_predict))
+        
+        return alpha_loss + laplacian_loss
+    

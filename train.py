@@ -14,6 +14,7 @@ from torch.utils.data.distributed import DistributedSampler
 from config import *
 from Trainer import LoadModel
 from dataset import load_classification_data
+from dataset import AIM500Dataset
 from benchmark.utils.testGPU import print_cuda
 
 def set_random_seed(seed, deterministic=False):
@@ -48,17 +49,34 @@ def train(model, reloadModel_epochs, local_rank, batch_size, world_size, data_pa
     if local_rank == 0:
         writer = SummaryWriter('log/train_EMAVFI')
     step_train, step_eval, best = 0, 0, 0
-    # dataset = VimeoDataset('train', data_path)
-    dataset = load_classification_data('train', data_path)
-    if(args.use_distribute):
-        print('DataLoader use distribute.')
-        sampler = DistributedSampler(dataset)
-        train_data = DataLoader(dataset, batch_size=batch_size, num_workers=8, pin_memory=True, drop_last=True, sampler=sampler)
-    else:
-        train_data = DataLoader(dataset, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True)
-    # dataset_val = VimeoDataset('test', data_path)
-    dataset_val = load_classification_data('test', data_path)
-    val_data = DataLoader(dataset_val, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True)
+
+    choose_dataset = 1
+    if(choose_dataset == 0):
+        # --------- classification 数据集加载 ------------------
+        dataset = load_classification_data('train', data_path)
+        if(args.use_distribute):
+            print('DataLoader use distribute.')
+            sampler = DistributedSampler(dataset)
+            train_data = DataLoader(dataset, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True, sampler=sampler)
+        else:
+            train_data = DataLoader(dataset, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True)
+        # dataset_val = VimeoDataset('test', data_path)
+        dataset_val = load_classification_data('test', data_path)
+        val_data = DataLoader(dataset_val, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True)
+        # -----------------------------------------------------
+    elif(choose_dataset == 1):
+        # --------- classification 数据集加载 -----------------
+        dataset = AIM500Dataset('train', root_dir='/workspace/EMA-GoogLeNet/data/AIM500')
+        if(args.use_distribute):
+            print('DataLoader use distribute.')
+            sampler = DistributedSampler(dataset)
+            train_data = DataLoader(dataset, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True, shuffle=True, sampler=sampler)
+        else:
+            train_data = DataLoader(dataset, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True, shuffle=True)
+        dataset_val = AIM500Dataset('test', root_dir='/workspace/EMA-GoogLeNet/data/AIM500')
+        val_data = DataLoader(dataset_val, batch_size=batch_size, num_workers=world_size, pin_memory=True, drop_last=True, shuffle=True)
+        # -----------------------------------------------------
+        print("train_data.__len__(), val_data.__len__():", dataset.__len__(), dataset_val.__len__())
 
     args.step_per_epoch = train_data.__len__()
 
