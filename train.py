@@ -148,7 +148,7 @@ if __name__ == "__main__":
     parser.add_argument('--local_rank', default=0, type=int, help='local rank')
     parser.add_argument('--world_size', default=4, type=int, help='world size')
     parser.add_argument('--batch_size', default=8, type=int, help='batch size')
-    parser.add_argument('--data_path', default= "data/train", type=str, help='data path of vimeo90k')
+    parser.add_argument('--data_path', default= "data/classification/train", type=str, help='data path of vimeo90k')
     parser.add_argument('--use_distribute', default= False, type=bool, help='train on distribute Devices by torch.distributed')
     args = parser.parse_args()
 

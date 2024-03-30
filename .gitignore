@@ -3,7 +3,8 @@ __pycache__/
 log/
 
 ckpt/*.pkl
-data/*
+data/AIM500/*
+data/classification/*
 model/onnx/*onnx
 
 *.pth
