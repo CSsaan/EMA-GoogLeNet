@@ -8,3 +8,4 @@ data/classification/*
 model/onnx/*onnx
 
 *.pth
+test.py
