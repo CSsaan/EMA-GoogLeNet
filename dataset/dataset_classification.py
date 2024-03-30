@@ -42,7 +42,7 @@ import torch.utils.data as Data
 #         return self.meta_data(index)
 
 # 图像分类任务，直接加载文件夹，自动根据文件夹来分成不同类的集合
-def load_data(dataset_name, path):
+def load_classification_data(dataset_name, path):
     data_root = f'{os.getcwd()}/{path}'
     normalize = transforms.Normalize([0.162, 0.151, 0.138], [0.058, 0.052, 0.048])
     # 定义数据集处理方法变量
