@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import torch
-import torchvision
 import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
@@ -53,7 +52,7 @@ def main(parameters_file_path):
 
     # 2. Initialize model (GoogLeNet)
     net = GoogLeNet(num_classes=num_classes)  # Flower5 has 3 channels (RGB) and 5 classes
-    net = net.cuda() if torch.cuda.is_available() else net  # Check if GPU is available
+    net = net.to(device)
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()
@@ -112,15 +111,15 @@ def main(parameters_file_path):
 
         val_accurate = acc / val_num
         val_loss = loss / val_num
-        print('[epoch %d] val_loss: %.3f  val_accuracy: %.3f' % (epoch + 1, val_loss, val_accurate))
+        print('val_loss: %.3f  val_accuracy: %.3f' % (val_loss, val_accurate))
 
         if val_accurate > best_acc:
             best_acc = val_accurate
-            torch.save(net.state_dict(), f"{save_path}/Best_LeNet_epoch_{epoch + 1}.pth")
+            torch.save(net.state_dict(), f"{save_path}/Best_GoogLeNet_epoch_{epoch + 1}.pth")
             print(f"Model saved at best accuracy: {best_acc:.3f}")
 
         # 每个epoch结束后，保存模型
-        torch.save(net.state_dict(), f"{save_path}/LeNet_epoch_{epoch + 1}.pth")
+        torch.save(net.state_dict(), f"{save_path}/GoogLeNet_epoch_{epoch + 1}.pth")
     
     print('Finished Training')
             

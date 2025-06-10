@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 
-from model import AlexNet # 加载模型
+from model import MobileNetV2, mobilenet_v3_small, mobilenet_v3_large # 加载模型
 from dataLoader.Flower5 import get_flower5_dataloaders  # 加载数据集
 from config import load_model_parameters  # 加载模型参数配置
 
@@ -23,8 +23,8 @@ def evaluate(net, loss_function, val_image, val_label):
     return val_loss, accuracy
 
 def main(parameters_file_path):
-    """ Main function to train the AlexNet model on Flower5 dataset.
-    Args: check in file: benchmark/config/AlexNet_parameters.yaml
+    """ Main function to train the MobileNet model on Flower5 dataset.
+    Args: check in file: benchmark/config/MobileNet_parameters.yaml
     """
     # 0. Load parameters
     parameters = load_model_parameters(parameters_file_path)
@@ -38,7 +38,7 @@ def main(parameters_file_path):
     save_path = parameters['save_path']
     os.makedirs(save_path, exist_ok=True)
     print(f"Using parameters from {parameters_file_path}:")
-    print(f"Training AlexNet for {epochs} epochs, batch size:{batch_size}, learning rate:{learning_rate}, num_classes:{num_classes}, saving to:{save_path}")
+    print(f"Training MobileNet for {epochs} epochs, batch size:{batch_size}, learning rate:{learning_rate}, num_classes:{num_classes}, saving to:{save_path}")
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -50,14 +50,30 @@ def main(parameters_file_path):
     val_image, val_label = next(val_data_iter) #  classes: ('daisy', 'dandelion', 'rose', 'sunflower', 'tulip')
     val_image, val_label = val_image.to(device, non_blocking=True), val_label.to(device, non_blocking=True)
 
-    # 2. Initialize model (AlexNet)
-    net = AlexNet(in_channels=3, num_classes=num_classes)  # Flower5 has 3 channels (RGB) and 5 classes
+    # 2. Initialize model (MobileNetV2, mobilenet_v3_small, mobilenet_v3_large)
+    # net = MobileNetV2(num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
+    net = mobilenet_v3_large(num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
+
+    # 加载预训练权重：download url: https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
+    load_pretrained = False
+    if load_pretrained:
+        model_weight_path = "./checkpoints/MobileNet/mobilenet_v2-b0353104.pth"
+        assert os.path.exists(model_weight_path), "file {} dose not exist.".format(model_weight_path)
+        pre_weights = torch.load(model_weight_path, weights_only=True)
+        # delete classifier weights
+        pre_dict = {k: v for k, v in pre_weights.items() if net.state_dict()[k].numel() == v.numel()}
+        missing_keys, unexpected_keys = net.load_state_dict(pre_dict, strict=False)
+        # freeze features weights
+        for param in net.features.parameters():
+            param.requires_grad = False
+
     net = net.to(device)
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()
     # 4. Define optimizer
-    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+    params = [p for p in net.parameters() if p.requires_grad] # 冻结部分
+    optimizer = optim.Adam(params, lr=learning_rate)
     
 
     # 5. Training loop
@@ -72,9 +88,9 @@ def main(parameters_file_path):
         for step, data in enumerate(train_bar):
             inputs, labels = data
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
-
+        
             # forward + backward + optimize
-            optimizer.zero_grad() # zero the parameter gradients
+            optimizer.zero_grad() # zero the parameter gradientsResNe
             outputs = net(inputs) # forward
             loss = loss_function(outputs, labels)
             loss.backward() # backward
@@ -115,11 +131,11 @@ def main(parameters_file_path):
 
         if val_accurate > best_acc:
             best_acc = val_accurate
-            torch.save(net.state_dict(), f"{save_path}/Best_AlexNet_epoch_{epoch + 1}.pth")
+            torch.save(net.state_dict(), f"{save_path}/Best_MobileNet_epoch_{epoch + 1}.pth")
             print(f"Model saved at best accuracy: {best_acc:.3f}")
 
         # 每个epoch结束后，保存模型
-        torch.save(net.state_dict(), f"{save_path}/AlexNet_epoch_{epoch + 1}.pth")
+        torch.save(net.state_dict(), f"{save_path}/MobileNet_epoch_{epoch + 1}.pth")
     
     print('Finished Training')
             
@@ -127,6 +143,6 @@ def main(parameters_file_path):
 
 if __name__ == '__main__':
     # 加载模型参数配置
-    ALL_parameters_file_path = 'benchmark/config/AlexNet_parameters.yaml'
+    ALL_parameters_file_path = 'benchmark/config/MobileNet_parameters.yaml'
 
     main(ALL_parameters_file_path)

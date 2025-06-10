@@ -17,7 +17,7 @@ def main(args):
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
     net = GoogLeNet(num_classes=5).to(device)
-    net.load_state_dict(torch.load(args.model_path))
+    net.load_state_dict(torch.load(args.model_path, weights_only=True))
 
     im = Image.open(args.input_path).convert('RGB')  # Convert image to RGB
     im = transform(im)  # [C, H, W]
@@ -29,14 +29,14 @@ def main(args):
         outputs = net(im)
         output = torch.squeeze(outputs) if device == 'cpu' else torch.squeeze(outputs).cpu()
         predict = torch.softmax(output, dim=0)
-        predict_cla = torch.argmax(predict).numpy()
+        predict_cla = torch.argmax(predict).item()
         print(f"Predicted class: {classes[predict_cla]}")
-        print(f"Confidence scores: {predict[predict_cla].numpy()}")
+        print(f"Confidence scores: {predict[predict_cla].item()}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', default='./checkpoints/GoogLeNet/Best_GoogLeNet_epoch_4.pth', type=str, help='path to the model')
-    parser.add_argument('--input_path', default= "D:/Users/74055/Desktop/OIP-C.jpg", type=str, help='image path for inference')
+    parser.add_argument('--input_path', default= "/home/cs/R-C.jpeg", type=str, help='image path for inference')
     args = parser.parse_args()
 
     main(args)

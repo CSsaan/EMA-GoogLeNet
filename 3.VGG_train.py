@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 
-from model import AlexNet # 加载模型
+from model import VGG # 加载模型
 from dataLoader.Flower5 import get_flower5_dataloaders  # 加载数据集
 from config import load_model_parameters  # 加载模型参数配置
 
@@ -23,8 +23,8 @@ def evaluate(net, loss_function, val_image, val_label):
     return val_loss, accuracy
 
 def main(parameters_file_path):
-    """ Main function to train the AlexNet model on Flower5 dataset.
-    Args: check in file: benchmark/config/AlexNet_parameters.yaml
+    """ Main function to train the VGG model on Flower5 dataset.
+    Args: check in file: benchmark/config/VGG_parameters.yaml
     """
     # 0. Load parameters
     parameters = load_model_parameters(parameters_file_path)
@@ -38,7 +38,7 @@ def main(parameters_file_path):
     save_path = parameters['save_path']
     os.makedirs(save_path, exist_ok=True)
     print(f"Using parameters from {parameters_file_path}:")
-    print(f"Training AlexNet for {epochs} epochs, batch size:{batch_size}, learning rate:{learning_rate}, num_classes:{num_classes}, saving to:{save_path}")
+    print(f"Training VGG for {epochs} epochs, batch size:{batch_size}, learning rate:{learning_rate}, num_classes:{num_classes}, saving to:{save_path}")
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -50,8 +50,8 @@ def main(parameters_file_path):
     val_image, val_label = next(val_data_iter) #  classes: ('daisy', 'dandelion', 'rose', 'sunflower', 'tulip')
     val_image, val_label = val_image.to(device, non_blocking=True), val_label.to(device, non_blocking=True)
 
-    # 2. Initialize model (AlexNet)
-    net = AlexNet(in_channels=3, num_classes=num_classes)  # Flower5 has 3 channels (RGB) and 5 classes
+    # 2. Initialize model (VGG)
+    net = VGG(in_channels=3, num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
     net = net.to(device)
 
     # 3. Define loss function
@@ -115,11 +115,11 @@ def main(parameters_file_path):
 
         if val_accurate > best_acc:
             best_acc = val_accurate
-            torch.save(net.state_dict(), f"{save_path}/Best_AlexNet_epoch_{epoch + 1}.pth")
+            torch.save(net.state_dict(), f"{save_path}/Best_VGG_epoch_{epoch + 1}.pth")
             print(f"Model saved at best accuracy: {best_acc:.3f}")
 
         # 每个epoch结束后，保存模型
-        torch.save(net.state_dict(), f"{save_path}/AlexNet_epoch_{epoch + 1}.pth")
+        torch.save(net.state_dict(), f"{save_path}/VGG_epoch_{epoch + 1}.pth")
     
     print('Finished Training')
             
@@ -127,6 +127,6 @@ def main(parameters_file_path):
 
 if __name__ == '__main__':
     # 加载模型参数配置
-    ALL_parameters_file_path = 'benchmark/config/AlexNet_parameters.yaml'
+    ALL_parameters_file_path = 'benchmark/config/VGG_parameters.yaml'
 
     main(ALL_parameters_file_path)

@@ -1,4 +1,4 @@
-epochs: 8
+epochs: 32
 batch_size: 32
 input_size: 32
 num_workers: 4

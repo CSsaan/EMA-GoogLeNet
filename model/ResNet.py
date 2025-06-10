@@ -34,7 +34,7 @@ class Residual(nn.Module):
         return out
 
 class ResNet(nn.Module):
-    def __init__(self, Residual, in_channels):
+    def __init__(self, in_channels, num_classes=10, init_weights=True):
         super(ResNet, self).__init__()
         self.b1 = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=1, stride=2), # (1, 224, 224) -> (64, 112, 112)
@@ -62,8 +62,21 @@ class ResNet(nn.Module):
         )
         self.b6 = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(25088, 10)
+            nn.Linear(25088, num_classes)
         )
+        if init_weights:
+            self._initialize_weights()
+        
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.b1(x) # (1, 224, 224) -> (64, 56, 56)
@@ -100,7 +113,7 @@ def ONNX_model(model, input_x):
 if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = ResNet(Residual, in_channels = 1).to(device)
+    model = ResNet(in_channels = 1).to(device)
 
     # (1). summary打印模型网络结构
     input_x = (1, 224, 224)

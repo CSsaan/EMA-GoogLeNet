@@ -46,7 +46,7 @@ def main(parameters_file_path):
 
     # 2. Initialize model (LeNet)
     net = LeNet(num_classes=num_classes)  # CIFAR-10 has 3 channels (RGB) and 10 classes
-    net = net.cuda() if torch.cuda.is_available() else net  # Check if GPU is available
+    net = net.to(device)
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()
@@ -104,7 +104,7 @@ def main(parameters_file_path):
 
         val_accurate = acc / val_num
         val_loss = loss / val_num
-        print('[epoch %d] val_loss: %.3f  val_accuracy: %.3f' % (epoch + 1, val_loss, val_accurate))
+        print('val_loss: %.3f  val_accuracy: %.3f' % (val_loss, val_accurate))
 
         if val_accurate > best_acc:
             best_acc = val_accurate

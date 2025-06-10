@@ -10,7 +10,7 @@ import onnx
 from onnxsim import simplify
 
 class VGG(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, num_classes=10, init_weights=True):
         super(VGG, self).__init__()
         self.b1 = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=1, stride=1), # (1, 224, 224) -> (64, 224, 224)
@@ -63,8 +63,22 @@ class VGG(nn.Module):
             nn.Dropout(0.5),
             nn.Linear(256, 128),
             nn.Dropout(0.5),
-            nn.Linear(128, 10),
+            nn.Linear(128, num_classes),
         )
+
+        if init_weights:
+            self._initialize_weights()
+        
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
     
     def forward(self, x):
         x = self.b1(x)
@@ -72,6 +86,7 @@ class VGG(nn.Module):
         x = self.b3(x)
         x = self.b4(x)
         x = self.b5(x)
+        x = self.b6(x)
         return x
 
 # ---------------------------------------------------------------------------------------

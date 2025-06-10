@@ -10,7 +10,7 @@ import onnx
 from onnxsim import simplify
 
 class AlexNet(torch.nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, num_classes=10, init_weights=True):
         super(AlexNet, self).__init__()
         self.down1 = nn.Sequential(
             nn.Conv2d(in_channels, 96, kernel_size=11, padding=0, stride=4), # (1, 227, 227) -> (96, 55, 55)
@@ -35,10 +35,7 @@ class AlexNet(torch.nn.Module):
             nn.ReLU(inplace=True),
         )
         self.down3 = nn.Sequential(
-            nn.Conv2d(384, 256, kernel_size=3, padding=1, stride=1), # (384, 13, 13) -> (256, 13, 13)
-            nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, padding=0, stride=2), # (256, 13, 13) -> (256, 6, 6)
+            nn.Conv2d(384, 256, kernel_size=3, padding=0, stride=2), # (256, 13, 13) -> (256, 6, 6)
         )
         self.liner = nn.Sequential(
             nn.Linear(9216, 4096), # (1, 9216) -> 4096
@@ -47,11 +44,11 @@ class AlexNet(torch.nn.Module):
             nn.Linear(4096, 4096), # 4096 -> 4096
             nn.Dropout(p=0.5),
             nn.ReLU(inplace=True),
-            nn.Linear(4096, 10), # 4096 -> 10
+            nn.Linear(4096, num_classes), # 4096 -> 10
         )
         self.seq = nn.Sequential(
             self.down1,   # (1, 227, 227) -> (96, 27, 27)
-            self.down2,   # (96, 27, 27) -> (256, 13, 13)
+            self.down2,   # (96, 27, 27)10-> (256, 13, 13)
             self.conv1,    # (256, 13, 13) -> (384, 13, 13)
             self.conv2,    # (384, 13, 13) -> (384, 13, 13)
             self.down3,   # (384, 13, 13) -> (256, 6, 6)
@@ -59,6 +56,20 @@ class AlexNet(torch.nn.Module):
             self.liner,   # 9216 -> 10
             nn.Softmax(dim=1)
         )
+
+        if init_weights:
+            self._initialize_weights()
+    
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
     
     def forward(self, x):
         return self.seq(x)
@@ -89,7 +100,7 @@ def ONNX_model(model, input_x):
 if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = AlexNet(in_channels = 1).to(device)
+    model = AlexNet(in_channels=1, num_classes=2).to(device)
 
     # (1). summary打印模型网络结构
     input_x = (1, 227, 227)
