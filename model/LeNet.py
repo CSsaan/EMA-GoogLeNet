@@ -11,124 +11,38 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 
-# class LeNet(nn.Module):
-#     def __init__(self, num_classes=10):
-#         super(LeNet, self).__init__()
-#         self.conv1 = nn.Conv2d(3, 16, 5)
-#         self.pool1 = nn.MaxPool2d(2, 2)
-#         self.conv2 = nn.Conv2d(16, 32, 5)
-#         self.pool2 = nn.MaxPool2d(2, 2)
-#         self.fc1 = nn.Linear(32*5*5, 120)
-#         self.fc2 = nn.Linear(120, 84)
-#         self.fc3 = nn.Linear(84, num_classes)
-
-#     def forward(self, x):
-#         x = F.relu(self.conv1(x))    # input(3, 32, 32) output(16, 28, 28)
-#         x = self.pool1(x)            # output(16, 14, 14)
-#         x = F.relu(self.conv2(x))    # output(32, 10, 10)
-#         x = self.pool2(x)            # output(32, 5, 5)
-#         x = x.view(-1, 32*5*5)       # output(32*5*5)
-#         x = F.relu(self.fc1(x))      # output(120)
-#         x = F.relu(self.fc2(x))      # output(84)
-#         x = self.fc3(x)              # output(num_classes)
-#         return x
-
-
-
-        
-
-class Inception(nn.Module):
-    def __init__(self, in_channels, c1, c2, c3, c4):
-        super(Inception, self).__init__()
-        self.ReLU = nn.ReLU()
-
-        # 路线1，单1×1卷积层
-        self.p1_1 = nn.Conv2d(in_channels=in_channels, out_channels=c1, kernel_size=1)
-
-        # 路线2，1×1卷积层, 3×3的卷积
-        self.p2_1 = nn.Conv2d(in_channels=in_channels, out_channels=c2[0], kernel_size=1)
-        self.p2_2 = nn.Conv2d(in_channels=c2[0], out_channels=c2[1], kernel_size=3, padding=1)
-
-        # 路线3，1×1卷积层, 5×5的卷积
-        self.p3_1 = nn.Conv2d(in_channels=in_channels, out_channels=c3[0], kernel_size=1)
-        self.p3_2 = nn.Conv2d(in_channels=c3[0], out_channels=c3[1], kernel_size=5, padding=2)
-
-        # 路线4，3×3的最大池化, 1×1的卷积
-        self.p4_1 = nn.MaxPool2d(kernel_size=3, padding=1, stride=1)
-        self.p4_2 = nn.Conv2d(in_channels=in_channels, out_channels=c4, kernel_size=1)
+class LeNet(nn.Module):
+    def __init__(self, num_classes=10):
+        super(LeNet, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, 5)
+        self.pool1 = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(16, 32, 5)
+        self.pool2 = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(32*5*5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, num_classes)
 
     def forward(self, x):
-        p1 = self.ReLU(self.p1_1(x))
-        p2 = self.ReLU(self.p2_2(self.ReLU(self.p2_1(x))))
-        p3 = self.ReLU(self.p3_2(self.ReLU(self.p3_1(x))))
-        p4 = self.ReLU(self.p4_2(self.p4_1(x)))
-        return torch.cat((p1, p2, p3, p4), dim=1)
-
-
-
-class GoogLeNet(nn.Module):
-    def __init__(self, num_classes=2):
-        super(GoogLeNet, self).__init__()
-        self.b1 = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
-
-        self.b2 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=64, out_channels=192, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
-
-        self.b3 = nn.Sequential(
-            Inception(192, 64, (96, 128), (16, 32), 32),
-            Inception(256, 128, (128, 192), (32, 96), 64),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
-
-        self.b4 = nn.Sequential(
-            Inception(480, 192, (96, 208), (16, 48), 64),
-            Inception(512, 160, (112, 224), (24, 64), 64),
-            Inception(512, 128, (128, 256), (24, 64), 64),
-            Inception(512, 112, (128, 288), (32, 64), 64),
-            Inception(528, 256, (160, 320), (32, 128), 128),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
-
-        self.b5 = nn.Sequential(
-            Inception(832, 256, (160, 320), (32, 128), 128),
-            Inception(832, 384, (192, 384), (48, 128), 128),
-            nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Flatten(),
-            nn.Linear(1024, num_classes))
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity='relu')
-                if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-
-                elif isinstance(m, nn.Linear):
-                    nn.init.normal_(m.weight, 0, 0.01)
-                    if m.bias is not None:
-                        nn.init.constant_(m.bias, 0)
-
-    def forward(self, x):
-        x = self.b1(x)
-        x = self.b2(x)
-        x = self.b3(x)
-        x = self.b4(x)
-        x = self.b5(x)
+        x = F.relu(self.conv1(x))    # input(3, 32, 32) output(16, 28, 28)
+        x = self.pool1(x)            # output(16, 14, 14)
+        x = F.relu(self.conv2(x))    # output(32, 10, 10)
+        x = self.pool2(x)            # output(32, 5, 5)
+        x = x.view(-1, 32*5*5)       # output(32*5*5)
+        x = F.relu(self.fc1(x))      # output(120)
+        x = F.relu(self.fc2(x))      # output(84)
+        x = self.fc3(x)              # output(num_classes)
         return x
+
 
 
 if __name__ == "__main__":
     # 打印模型网络结构
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = GoogLeNet().to(device)
-    print(summary(model, (3, 224, 224)))
+    model = LeNet(10).to(device)
+    print(summary(model, (3, 32, 32), device=device.type))  # 打印模型网络结构
 
     # 可视化模型网络结构
-    input_x = torch.randn(8, 3, 224, 224).to(device)  # 随机生成一个输入
+    input_x = torch.randn(8, 3, 32, 32).to(device)  # 随机生成一个输入
     modelData = "./demo.pth"  # 定义模型数据保存的路径
     # modelData = "./demo.onnx"  # 有人说应该是 onnx 文件，但我尝试 pth 是可以的 
     torch.onnx.export(model, input_x, modelData)  # 将 pytorch 模型以 onnx 格式导出并保存

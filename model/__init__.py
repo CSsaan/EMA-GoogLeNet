@@ -1,5 +1,6 @@
 from .GoogLeNet_model import GoogLeNet 
-from .Inception_model import Inception
+from .LeNet import LeNet
 
 
-__all__ = ['GoogLeNet', 'Inception']
+
+__all__ = ['GoogLeNet', 'LeNet']

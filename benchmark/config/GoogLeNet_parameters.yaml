@@ -1,0 +1,9 @@
+epochs: 4
+batch_size: 4
+input_size: 224
+num_workers: 4
+learning_rate: 0.001
+num_classes: 5
+print_every_minibatch: 500
+dataset_path: './dataset/Flower5'
+save_path: 'checkpoints/GoogLeNet'
