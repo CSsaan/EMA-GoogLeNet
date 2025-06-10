@@ -29,8 +29,8 @@ def get_flower5_dataloaders(data_dir='./dataset/Flower5', input_size=224, batch_
     train_dataset, test_dataset = random_split(full_dataset, [train_size, test_size])
 
     # 创建数据加载器
-    trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    testloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
+    testloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=True)
 
     # # 类别映射
     class_to_idx = full_dataset.class_to_idx  # {'daisy': 0, 'dandelion': 1, 'roses': 2, 'sunflowers': 3, 'tulips': 4}

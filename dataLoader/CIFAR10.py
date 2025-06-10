@@ -30,8 +30,9 @@ def get_cifar10_loaders(root='./dataset/CIFAR10', input_size=32, batch_size=64, 
                                            download=True, transform=data_transform["val"])
     
     # 创建数据加载器
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=True)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=True)
+    print('Classes:', trainset.classes)
     return trainloader, testloader, trainset, testset
 
 

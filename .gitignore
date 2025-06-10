@@ -7,6 +7,7 @@ data/AIM500/*
 data/classification/*
 model/onnx/*onnx
 dataset/*/*
+!dataset/*/
 
 *.pth
 test.py

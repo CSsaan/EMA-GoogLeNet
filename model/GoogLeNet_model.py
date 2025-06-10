@@ -11,32 +11,6 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 
-# class LeNet(nn.Module):
-#     def __init__(self, num_classes=10):
-#         super(LeNet, self).__init__()
-#         self.conv1 = nn.Conv2d(3, 16, 5)
-#         self.pool1 = nn.MaxPool2d(2, 2)
-#         self.conv2 = nn.Conv2d(16, 32, 5)
-#         self.pool2 = nn.MaxPool2d(2, 2)
-#         self.fc1 = nn.Linear(32*5*5, 120)
-#         self.fc2 = nn.Linear(120, 84)
-#         self.fc3 = nn.Linear(84, num_classes)
-
-#     def forward(self, x):
-#         x = F.relu(self.conv1(x))    # input(3, 32, 32) output(16, 28, 28)
-#         x = self.pool1(x)            # output(16, 14, 14)
-#         x = F.relu(self.conv2(x))    # output(32, 10, 10)
-#         x = self.pool2(x)            # output(32, 5, 5)
-#         x = x.view(-1, 32*5*5)       # output(32*5*5)
-#         x = F.relu(self.fc1(x))      # output(120)
-#         x = F.relu(self.fc2(x))      # output(84)
-#         x = self.fc3(x)              # output(num_classes)
-#         return x
-
-
-
-        
-
 class Inception(nn.Module):
     def __init__(self, in_channels, c1, c2, c3, c4):
         super(Inception, self).__init__()
@@ -67,7 +41,7 @@ class Inception(nn.Module):
 
 
 class GoogLeNet(nn.Module):
-    def __init__(self, num_classes=2):
+    def __init__(self, num_classes=2, init_weights=True):
         super(GoogLeNet, self).__init__()
         self.b1 = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=64, kernel_size=7, stride=2, padding=3),
@@ -101,16 +75,20 @@ class GoogLeNet(nn.Module):
             nn.Flatten(),
             nn.Linear(1024, num_classes))
 
+        if init_weights:
+            self._initialize_weights()
+        
+
+    def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0)
-
-                elif isinstance(m, nn.Linear):
-                    nn.init.normal_(m.weight, 0, 0.01)
-                    if m.bias is not None:
-                        nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.b1(x)
@@ -119,6 +97,7 @@ class GoogLeNet(nn.Module):
         x = self.b4(x)
         x = self.b5(x)
         return x
+        
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import torch
 import torchvision
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.transforms as transforms
+from tqdm import tqdm
 
 from model import GoogLeNet # 加载模型
 from dataLoader.Flower5 import get_flower5_dataloaders  # 加载数据集
@@ -35,12 +35,11 @@ def main(parameters_file_path):
     num_workers = parameters['num_workers']
     learning_rate = parameters['learning_rate']
     num_classes = parameters['num_classes']
-    print_every_minibatch = parameters['print_every_minibatch']
     dataset_path = parameters['dataset_path']
     save_path = parameters['save_path']
     os.makedirs(save_path, exist_ok=True)
     print(f"Using parameters from {parameters_file_path}:")
-    print(f"Training GoogLeNet for {epochs} epochs, batch size:{batch_size}, learning rate:{learning_rate}, num_classes:{num_classes}, print every {print_every_minibatch} mini-batches, saving to:{save_path}")
+    print(f"Training GoogLeNet for {epochs} epochs, batch size:{batch_size}, learning rate:{learning_rate}, num_classes:{num_classes}, saving to:{save_path}")
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -63,41 +62,69 @@ def main(parameters_file_path):
     
 
     # 5. Training loop
-    min_val_loss = float('inf')  # 初始化最小验证损失
-
+    best_acc = 0.0  # 初始化最佳准确率
+    train_steps = len(train_loader)  # 计算每个epoch的迭代次数
     for epoch in range(epochs):  # loop over the dataset multiple times
+        
+        # train
+        net.train()
         running_loss = 0.0
-        for step, data in enumerate(train_loader, start=0):
-            # get the inputs; data is a list of [inputs, labels]
+        train_bar = tqdm(train_loader, desc='Training Progress')
+        for step, data in enumerate(train_bar):
             inputs, labels = data
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
 
             # forward + backward + optimize
             optimizer.zero_grad() # zero the parameter gradients
-            net.train()
             outputs = net(inputs) # forward
             loss = loss_function(outputs, labels)
             loss.backward() # backward
             optimizer.step() # optimize
 
-            # print statistics
+            # sum up loss
             running_loss += loss.item()
-            if step % print_every_minibatch == 0:    # print every 500 mini-batches
-                val_loss, accuracy = evaluate(net, loss_function, val_image, val_label)
-                print('\r[%d, %5d] train_loss: %.3f  test_accuracy: %.3f' % (epoch + 1, step + 1, running_loss / print_every_minibatch, accuracy), end='', flush=True)
-                running_loss = 0.0
-                # 保存最小loss的模型
-                if val_loss < min_val_loss:
-                    min_val_loss = val_loss
-                    torch.save(net.state_dict(), f"{save_path}/Best_GoogLeNet_epoch_{epoch + 1}.pth")
-                    print(f"Model saved at epoch {epoch + 1}, step {step + 1} with val_loss: {val_loss:.3f}")
+
+            # 进度条显示
+            postfix = {
+                'progress': '[{}/{}]'.format(epoch + 1, epochs),
+                'loss': '{:.4f}'.format(loss)
+            }
+            train_bar.set_postfix(postfix)
+        print('[epoch %d] train_loss: %.3f' % (epoch + 1, running_loss / train_steps))
+
+        
+        
+        # validate
+        net.eval()
+        acc = 0.0  # accumulate accurate number / epoch
+        loss = 0.0
+        val_num = len(_testset)
+        with torch.no_grad():
+            val_bar = tqdm(val_loader, desc='Validating Progress')
+            for val_data in val_bar:
+                val_inputs, val_labels = val_data
+                val_inputs, val_labels = val_inputs.to(device, non_blocking=True), val_labels.to(device, non_blocking=True) 
+
+                val_outputs = net(val_inputs)
+                loss += loss_function(val_outputs, val_labels).item()
+                predict_y = torch.max(val_outputs, dim=1)[1]
+                acc += torch.eq(predict_y, val_labels).sum().item()
+
+        val_accurate = acc / val_num
+        val_loss = loss / val_num
+        print('[epoch %d] val_loss: %.3f  val_accuracy: %.3f' % (epoch + 1, val_loss, val_accurate))
+
+        if val_accurate > best_acc:
+            best_acc = val_accurate
+            torch.save(net.state_dict(), f"{save_path}/Best_LeNet_epoch_{epoch + 1}.pth")
+            print(f"Model saved at best accuracy: {best_acc:.3f}")
+
         # 每个epoch结束后，保存模型
-        torch.save(net.state_dict(), f"{save_path}/GoogLeNet_epoch_{epoch + 1}.pth")
+        torch.save(net.state_dict(), f"{save_path}/LeNet_epoch_{epoch + 1}.pth")
+    
     print('Finished Training')
-
-    torch.save(net.state_dict(), f"{save_path}/GoogLeNet_final.pth")
-
-
+            
+        
 
 if __name__ == '__main__':
     # 加载模型参数配置

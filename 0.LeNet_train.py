@@ -62,20 +62,19 @@ def main(parameters_file_path):
         # train
         net.train()
         running_loss = 0.0
-        train_bar = tqdm(train_loader, desc='Progress')
+        train_bar = tqdm(train_loader, desc='Training Progress')
         for step, data in enumerate(train_bar):
             inputs, labels = data
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
 
             # forward + backward + optimize
             optimizer.zero_grad() # zero the parameter gradients
-            net.train()
             outputs = net(inputs) # forward
             loss = loss_function(outputs, labels)
             loss.backward() # backward
             optimizer.step() # optimize
 
-            # print statistics
+            # sum up loss
             running_loss += loss.item()
 
             # 进度条显示
@@ -93,7 +92,7 @@ def main(parameters_file_path):
         loss = 0.0
         val_num = len(_testset)
         with torch.no_grad():
-            val_bar = tqdm(val_loader, file=sys.stdout)
+            val_bar = tqdm(val_loader, desc='Validating Progress')
             for val_data in val_bar:
                 val_inputs, val_labels = val_data
                 val_inputs, val_labels = val_inputs.to(device, non_blocking=True), val_labels.to(device, non_blocking=True) 
