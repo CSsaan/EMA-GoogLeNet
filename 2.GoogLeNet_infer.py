@@ -4,19 +4,19 @@ import numpy as np
 import torchvision.transforms as transforms
 from PIL import Image
 
-from model import LeNet # 加载模型
+from model import GoogLeNet # 加载模型
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+classes = ('daisy', 'dandelion', 'roses', 'sunflowers', 'tulips')  # Flower5 dataset classes
 
 def main(args):
     transform = transforms.Compose(
-        [transforms.Resize((32, 32)),  # Resize to 32x32
+        [transforms.Resize((224, 224)),  # Resize to 224x224
          transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    net = LeNet(num_classes=10).to(device)
+    net = GoogLeNet(num_classes=5).to(device)
     net.load_state_dict(torch.load(args.model_path))
 
     im = Image.open(args.input_path).convert('RGB')  # Convert image to RGB
@@ -27,14 +27,15 @@ def main(args):
         im = im.to(device, non_blocking=True)
         net.eval()
         outputs = net(im)
-        predict = torch.max(outputs if device == 'cpu' else outputs.cpu(), dim=1)[1].numpy()
-        # predict = torch.max(outputs, dim=1)[1].numpy()
-    print(classes[int(predict)])
-
+        output = torch.squeeze(outputs) if device == 'cpu' else torch.squeeze(outputs).cpu()
+        predict = torch.softmax(output, dim=0)
+        predict_cla = torch.argmax(predict).numpy()
+        print(f"Predicted class: {classes[predict_cla]}")
+        print(f"Confidence scores: {predict[predict_cla].numpy()}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', default='./checkpoints/LeNet/Best_LeNet_epoch_4.pth', type=str, help='path to the model')
+    parser.add_argument('--model_path', default='./checkpoints/GoogLeNet/Best_GoogLeNet_epoch_4.pth', type=str, help='path to the model')
     parser.add_argument('--input_path', default= "D:/Users/74055/Desktop/OIP-C.jpg", type=str, help='image path for inference')
     args = parser.parse_args()
 

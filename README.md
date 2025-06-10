@@ -41,21 +41,22 @@ pip install -r requirements.txt
 ## 📂 Repo structure (WIP)
 ```
 ├── README.md
-├── Trainer.py                    -> load model & train.
-├── config.py                     -> all models dictionary
-├── dataset.py                    -> dataLoader
-├── demo_Fc.py                    -> model inder
-├── pyproject.toml                ->  project config
-├── requirements.txt
-├── train.py                      -> main
 ├── benchmark
-│   ├── loss.py
+│   ├── utils
 │   └── config                    -> all model's parameters
-└── utils
-│   ├── testGPU.py
-│   ├── yuv_frame_io.py
-│   └── print_structure.py
-├── data                          -> dataset
-├── log                           -> tensorboard log
-└── model
+├── dataLoader                    -> dataLoader for each dataset.
+├── dataset                       -> download dataset and put it in this folder.
+├── model_train.py                -> load model & train.
+├── model_infer.py                -> load model & inference.
+├── config.py                     -> some configurations.
+├── requirements.txt
+├── log                           -> tensorboard log.
+└── model                         -> model definition.
+    ├── lenet.py
+    ├── alexnet.py
+    ├── googlenet.py
+    ├── resnet.py
+    ├── mobilenet.py
+    ├── shufflenet.py
+    └── efficientnet.py
 ```

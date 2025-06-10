@@ -1,9 +1,8 @@
 epochs: 4
-batch_size: 32
+batch_size: 64
 input_size: 32
 num_workers: 4
 learning_rate: 0.001
 num_classes: 10
-print_every_minibatch: 500
 dataset_path: './dataset/CIFAR10'
 save_path: 'checkpoints/LeNet'
