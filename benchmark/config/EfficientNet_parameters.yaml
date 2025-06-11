@@ -1,0 +1,16 @@
+epochs: 32
+batch_size: 16
+input_size:
+    B0: 224
+    B1: 240
+    B2: 260
+    B3: 300
+    B4: 380
+    B5: 456
+    B6: 528
+    B7: 600
+num_workers: 4
+learning_rate: 0.001
+num_classes: 5
+dataset_path: './dataset/Flower5'
+save_path: 'checkpoints/EfficientNet'

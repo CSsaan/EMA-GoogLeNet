@@ -43,7 +43,7 @@ def main(parameters_file_path):
 
     # 2. Initialize model (MobileNetV2, mobilenet_v3_small, mobilenet_v3_large)
     # net = MobileNetV2(num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
-    net = mobilenet_v3_large(num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
+    net = mobilenet_v3_large(num_classes=num_classes).to(device) # Flower5 has 3 channels (RGB) and 5 classes
 
     # 加载预训练权重：download url: https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
     load_pretrained = False
@@ -57,8 +57,6 @@ def main(parameters_file_path):
         # freeze features weights
         for param in net.features.parameters():
             param.requires_grad = False
-
-    net = net.to(device)
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()

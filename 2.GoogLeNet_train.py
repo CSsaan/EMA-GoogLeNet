@@ -42,8 +42,7 @@ def main(parameters_file_path):
     val_image, val_label = val_image.to(device, non_blocking=True), val_label.to(device, non_blocking=True)
 
     # 2. Initialize model (GoogLeNet)
-    net = GoogLeNet(num_classes=num_classes)  # Flower5 has 3 channels (RGB) and 5 classes
-    net = net.to(device)
+    net = GoogLeNet(num_classes=num_classes).to(device)  # Flower5 has 3 channels (RGB) and 5 classes
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()

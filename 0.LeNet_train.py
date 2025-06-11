@@ -36,8 +36,7 @@ def main(parameters_file_path):
     train_loader, val_loader, _trainset, _testset = get_cifar10_loaders(root=dataset_path, input_size=input_size, batch_size=batch_size, num_workers=num_workers)
 
     # 2. Initialize model (LeNet)
-    net = LeNet(num_classes=num_classes)  # CIFAR-10 has 3 channels (RGB) and 10 classes
-    net = net.to(device)
+    net = LeNet(num_classes=num_classes).to(device)  # CIFAR-10 has 3 channels (RGB) and 10 classes
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()

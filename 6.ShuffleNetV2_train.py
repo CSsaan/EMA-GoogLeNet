@@ -44,7 +44,7 @@ def main(parameters_file_path):
     val_image, val_label = val_image.to(device, non_blocking=True), val_label.to(device, non_blocking=True)
 
     # 2. Initialize model (shufflenet_v2_x0_5, shufflenet_v2_x1_0, shufflenet_v2_x1_5, shufflenet_v2_x2_0)
-    net = shufflenet_v2_x0_5(num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
+    net = shufflenet_v2_x0_5(num_classes=num_classes).to(device) # Flower5 has 3 channels (RGB) and 5 classes
 
     # 加载预训练权重：download url: 详见./model/ShuffleNetV2.py
     load_pretrained = False
@@ -58,7 +58,7 @@ def main(parameters_file_path):
         print(f"Missing keys: {missing_keys}")
         
     # 冻结部分权重
-    freeze_layers = True
+    freeze_layers = False
     if freeze_layers:
         for name, para in net.named_parameters():
             if "fc" not in name: # 除最后的全连接层外，其他权重全部冻结
@@ -67,8 +67,6 @@ def main(parameters_file_path):
         trainable_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
         total_params = sum(p.numel() for p in net.parameters())
         print(f"TrainableParams/TotalParams: {trainable_params:,}/{total_params:,}, {100 * trainable_params / total_params:.1f}%")
-
-    net = net.to(device)
 
     # 3. Define loss function
     loss_function = nn.CrossEntropyLoss()
