@@ -4,7 +4,7 @@ import numpy as np
 import torchvision.transforms as transforms
 from PIL import Image
 
-from model import AlexNet # 加载模型
+from model import shufflenet_v2_x0_5, shufflenet_v2_x1_0, shufflenet_v2_x1_5, shufflenet_v2_x2_0 # 加载模型
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -12,11 +12,11 @@ classes = ('daisy', 'dandelion', 'roses', 'sunflowers', 'tulips')  # Flower5 dat
 
 def main(args):
     transform = transforms.Compose(
-        [transforms.Resize((227, 227)),  # Resize to 227x227
+        [transforms.Resize((224, 224)),  # Resize to 224x224
          transforms.ToTensor(),
          transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    net = AlexNet(num_classes=5).to(device)
+    net = shufflenet_v2_x0_5(num_classes=5).to(device)
     net.load_state_dict(torch.load(args.model_path, weights_only=True))
 
     im = Image.open(args.input_path).convert('RGB')  # Convert image to RGB
@@ -35,7 +35,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', default='./checkpoints/AlexNet/Best_AlexNet_epoch_27.pth', type=str, help='path to the model')
+    parser.add_argument('--model_path', default='./checkpoints/ShuffleNetV2/Best_ShuffleNetV2_epoch_2.pth', type=str, help='path to the model')
     parser.add_argument('--input_path', default= "/home/cs/R-C.jpeg", type=str, help='image path for inference')
     args = parser.parse_args()
 

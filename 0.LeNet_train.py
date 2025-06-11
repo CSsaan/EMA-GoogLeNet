@@ -10,15 +10,6 @@ from model import LeNet # 加载模型
 from dataLoader.CIFAR10 import get_cifar10_loaders  # 加载数据集
 from config import load_model_parameters  # 加载模型参数配置
 
-def evaluate(net, loss_function, val_image, val_label):
-    net.eval()
-    with torch.no_grad():
-        val_outputs = net(val_image)
-        val_loss = loss_function(val_outputs, val_label).item()
-        predict_y = torch.max(val_outputs, dim=1)[1]
-        accuracy = torch.eq(predict_y, val_label).sum().item() / val_label.size(0)
-    return val_loss, accuracy
-
 def main(parameters_file_path):
     """ Main function to train the LeNet model on CIFAR-10 dataset.
     Args: check in file: benchmark/config/LeNet_parameters.yaml

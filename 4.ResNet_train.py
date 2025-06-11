@@ -13,15 +13,6 @@ from config import load_model_parameters  # 加载模型参数配置
 22. 花卉数据集: Flower5, 手动下载解压至./dataset/Flower5目录下。下载地址见doc/dataset_info.md。
 """
 
-def evaluate(net, loss_function, val_image, val_label):
-    net.eval()
-    with torch.no_grad():
-        val_outputs = net(val_image)
-        val_loss = loss_function(val_outputs, val_label).item()
-        predict_y = torch.max(val_outputs, dim=1)[1]
-        accuracy = torch.eq(predict_y, val_label).sum().item() / val_label.size(0)
-    return val_loss, accuracy
-
 def main(parameters_file_path):
     """ Main function to train the ResNet model on Flower5 dataset.
     Args: check in file: benchmark/config/ResNet_parameters.yaml
@@ -51,7 +42,7 @@ def main(parameters_file_path):
     val_image, val_label = val_image.to(device, non_blocking=True), val_label.to(device, non_blocking=True)
 
     # 2. Initialize model (ResNet)
-    net = ResNet(in_channels=3, num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
+    net = ResNet(num_classes=num_classes) # Flower5 has 3 channels (RGB) and 5 classes
     net = net.to(device)
 
     # 3. Define loss function

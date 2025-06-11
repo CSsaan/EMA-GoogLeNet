@@ -10,8 +10,9 @@ import onnx
 from onnxsim import simplify
 
 class AlexNet(torch.nn.Module):
-    def __init__(self, in_channels, num_classes=10, init_weights=True):
+    def __init__(self, num_classes=10, init_weights=True):
         super(AlexNet, self).__init__()
+        in_channels = 3
         self.down1 = nn.Sequential(
             nn.Conv2d(in_channels, 96, kernel_size=11, padding=0, stride=4), # (1, 227, 227) -> (96, 55, 55)
             nn.BatchNorm2d(96),

@@ -6,7 +6,7 @@ Using EMA to train Image Classification task.
  - [GoogLeNet](https://arxiv.org/pdf/1409.4842):在 ILSVRC 2014（ImageNet 大规模视觉识别挑战赛）中取得了第一名。
  - [ResNet](https://arxiv.org/abs/1512.03385):在 ILSVRC 2015 中取得了第一名。
  - [MobileNet](https://arxiv.org/abs/1704.04861):2017年在移动设备上运行的轻量级卷积神经网络。
- - [ShuffleNet](https://arxiv.org/abs/1707.01083):2017年在移动设备上运行的轻量级卷积神经网络，使用通道混洗操作。
+ - [ShuffleNetV2](https://arxiv.org/abs/1807.11164):2018年旷视提出的 ShuffleNet 升级版本，并被 ECCV2018 收录。
  - [EfficientNet](https://arxiv.org/abs/1905.11946):在 ILSVRC 2019 中取得了第一名，使用复合缩放方法来平衡网络的宽度、深度和分辨率。
 
 ## 📦 Requirements
@@ -17,7 +17,11 @@ skimage 0.19.2
 numpy 1.23.1
 opencv-python 4.6.0
 timm 0.6.11
+pillow
 tqdm
+onnx
+torchsummary
+
 
 ## 📦 Installation
 ```bash

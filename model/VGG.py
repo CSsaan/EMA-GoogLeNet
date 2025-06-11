@@ -10,8 +10,9 @@ import onnx
 from onnxsim import simplify
 
 class VGG(nn.Module):
-    def __init__(self, in_channels, num_classes=10, init_weights=True):
+    def __init__(self, num_classes=10, init_weights=True):
         super(VGG, self).__init__()
+        in_channels = 3
         self.b1 = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=1, stride=1), # (1, 224, 224) -> (64, 224, 224)
             nn.BatchNorm2d(64),
