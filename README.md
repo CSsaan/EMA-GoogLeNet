@@ -1,13 +1,17 @@
 # Image Classification
 Using EMA to train Image Classification task.
 
- - [LeNet](https://ieeexplore.ieee.org/document/726791):最早的卷积神经网络之一。
- - [AlexNet](https://arxiv.org/abs/AlexNet):在 ILSVRC 2012 中取得了第一名。
- - [GoogLeNet](https://arxiv.org/pdf/1409.4842):在 ILSVRC 2014（ImageNet 大规模视觉识别挑战赛）中取得了第一名。
- - [ResNet](https://arxiv.org/abs/1512.03385):在 ILSVRC 2015 中取得了第一名。
- - [MobileNet](https://arxiv.org/abs/1704.04861):2017年在移动设备上运行的轻量级卷积神经网络。
- - [ShuffleNetV2](https://arxiv.org/abs/1807.11164):2018年旷视提出的 ShuffleNet 升级版本，并被 ECCV2018 收录。
- - [EfficientNet](https://arxiv.org/abs/1905.11946):在 ILSVRC 2019 中取得了第一名，使用复合缩放方法来平衡网络的宽度、深度和分辨率。
+| 神经网络 | 年份 | 标签 | 作者 |
+| --- | --- | --- | --- |
+| [LeNet](https://ieeexplore.ieee.org/document/726791) | 1998年 | CNN开山之作 | 纽约大学 |
+| [AlexNet](https://arxiv.org/abs/AlexNet) | 2012年 | 深度学习 CV领域划时代论文 具有里程碑意义 ImageNet 2020冠军 | 多伦多大学 Hinton团队 |
+| [GoogLeNet](https://arxiv.org/pdf/1409.4842) | 2014年 | Google系列论文开创论文 （ImageNet 大规模视觉识别挑战赛 2014冠军 Inception模块 | 谷歌 |
+| **VGG** | 2014年 | 开启3*3卷积堆叠时代 ImageNet 2014亚军 VGG-16和VGG-19 | 牛津大学 |
+| [ResNet](https://arxiv.org/abs/1512.03385) | 2015年 | 最具影响力的卷积 神经网络 ImageNet 2015冠军 残差网络 | 何凯明团队 微软亚院 |
+| **DenseNet** | 2017年 | ImageNet 2016冠军 CVPR 2017最佳论文 Dense模块 | 康奈尔大学 清华大学 |
+| [MobileNet](https://arxiv.org/abs/1704.04861) | 2017年 | 轻量级 Group卷积 Depthwise Seperable卷积 | 谷歌 |
+| [ShuffleNetV2](https://arxiv.org/abs/1807.11164) | 2018年 | ImageNet 2018冠军 旷视科技 | 旷视科技 |
+| [EfficientNet](https://arxiv.org/abs/1905.11946) | 2019年 | ImageNet 2019冠军 使用复合缩放方法来平衡网络的宽度、深度和分辨率 | 谷歌 |
 
 ## 📦 Requirements
 Python >= 3.8
@@ -20,6 +24,8 @@ timm 0.6.11
 pillow
 tqdm
 onnx
+openvino-dev
+nncf
 torchsummary
 
 
@@ -50,6 +56,10 @@ pip install -r requirements.txt
 │   └── config                    -> all model's parameters
 ├── dataLoader                    -> dataLoader for each dataset.
 ├── dataset                       -> download dataset and put it in this folder.
+├── deploying
+│   ├── convert_onnx              -> convert pytorch model to onnx.
+│   ├── convert_tensorRT          -> convert pytorch model to tensorrt.
+│   └── convert_openvino          -> convert pytorch model to openvino.
 ├── model_train.py                -> load model & train.
 ├── model_infer.py                -> load model & inference.
 ├── config.py                     -> some configurations.
@@ -62,5 +72,5 @@ pip install -r requirements.txt
     ├── resnet.py
     ├── mobilenet.py
     ├── shufflenet.py
-    └── efficientnet.py
+    └── ... .py
 ```
