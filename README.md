@@ -1,5 +1,5 @@
 # Image Classification
-Using EMA to train Image Classification task.
+Training [Image Classification] & [Key Point] & ... task.
 
 | 神经网络 | 年份 | 标签 | 作者 |
 | --- | --- | --- | --- |
@@ -60,11 +60,9 @@ pip install -r requirements.txt
 │   ├── convert_onnx              -> convert pytorch model to onnx.
 │   ├── convert_tensorRT          -> convert pytorch model to tensorrt.
 │   └── convert_openvino          -> convert pytorch model to openvino.
-├── model_train.py                -> load model & train.
-├── model_infer.py                -> load model & inference.
-├── config.py                     -> some configurations.
-├── requirements.txt
-├── log                           -> tensorboard log.
+├── ImageClassification           -> load model & train & inference for Image Classification task.
+├── KeyPoint                      -> load model & train & inference for Key Point task.
+│   └── deeppose.py
 └── model                         -> model definition.
     ├── lenet.py
     ├── alexnet.py
@@ -74,3 +72,12 @@ pip install -r requirements.txt
     ├── shufflenet.py
     └── ... .py
 ```
+
+## 分布式训练
+- [Pytorch分布式训练（单机、多机）](benchmark\utils\parallel_torchrun.py) - benchmark\utils\parallel_torchrun.py
+
+## 模型格式转换 & 部署
+- [ONNX](deploying\convert_onnx\export.py) - deploying\convert_onnx\
+- [openVINO](deploying\convert_openvino\0.export.py) - deploying\convert_openvino\
+- [TensorRT](deploying\convert_tensorRT\export.py) - deploying\convert_tensorRT\
+

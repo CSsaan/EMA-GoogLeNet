@@ -1,0 +1,11 @@
+lr: 5e-4
+input_size: 256
+num_keypoints: 98
+epochs: 32
+batch_size: 4
+num_workers: 4
+warmup_epoch: 10
+lr_steps: [170, 200]
+dataset_path: './dataset/WFLW'
+save_path: 'checkpoints/PoseModel'
+resume: ''
