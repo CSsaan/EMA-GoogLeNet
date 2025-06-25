@@ -89,9 +89,19 @@ def main(parameters_file_path):
 
             # forward + backward + optimize
             optimizer.zero_grad()
-            with torch.autocast(device_type=device.type): # use mixed precision to speed up training
-                pred: torch.Tensor = net(inputs)
-                loss: torch.Tensor = loss_function(pred.reshape((-1, num_keypoints, 2)), labels, wh_tensor)
+            # with torch.autocast(device_type=device.type): # use mixed precision to speed up training
+            pred: torch.Tensor = net(inputs)
+            loss: torch.Tensor = loss_function(pred.reshape((-1, num_keypoints, 2)), labels, wh_tensor)
+
+
+            # 进度条显示
+            postfix = {
+                'progress': '[{}/{}]'.format(epoch + 1, epochs),
+                'lr': '{:.6f}'.format(optimizer.param_groups[0]['lr']),
+                'loss': '{:.4f}'.format(loss)
+            }
+            train_bar.set_postfix(postfix)
+
 
             if not math.isfinite(loss.item()):
                 print("Loss is {}, stopping training".format(loss.item()))
@@ -142,7 +152,7 @@ def main(parameters_file_path):
             'scheduler': scheduler.state_dict(),
             'epoch': epoch
         }
-        if nme > best_acc:
+        if nme < best_acc:
             best_acc = nme
             torch.save(save_files, os.path.join(save_path, f"Best_DeepPose_net_optimizer_scheduler_epoch{epoch}.pth"))
             torch.save(net.state_dict(), f"{save_path}/Best_DeepPose_epoch_{epoch + 1}.pth")

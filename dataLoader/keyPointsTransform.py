@@ -5,6 +5,9 @@ import cv2
 import torch
 import numpy as np
 
+"""
+WFLW数据集（人脸98点检测），官方链接：https://wywu.github.io/projects/LAB/WFLW.html
+"""
 
 wflw_flip_indices_dict = {
     0: 32,
