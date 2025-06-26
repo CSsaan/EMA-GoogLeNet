@@ -5,7 +5,7 @@ import os
 EXPLICIT_BATCH = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
 TRT_LOGGER = trt.Logger()
 
-def get_engine(onnx_file_path, engine_file_path=""):
+def get_engine(onnx_file_path, input_shape, engine_file_path=""):
     """Attempts to load a serialized engine if available, otherwise builds a new TensorRT engine and saves it."""
 
     def build_engine():
@@ -33,11 +33,14 @@ def get_engine(onnx_file_path, engine_file_path=""):
                     return None
 
             # # The actual yolov3.onnx is generated with batch size 64. Reshape input to batch size 1
-            # network.get_input(0).shape = [1, 3, 608, 608]
+            network.get_input(0).shape = input_shape
 
             print("Completed parsing of ONNX file")
             print("Building an engine from file {}; this may take a while...".format(onnx_file_path))
             plan = builder.build_serialized_network(network, config)
+            if plan is None:
+                print("ERROR: Failed to build serialized network.")
+                return None
             engine = runtime.deserialize_cuda_engine(plan)
             print("Completed creating Engine")
             with open(engine_file_path, "wb") as f:
@@ -60,5 +63,6 @@ if __name__ == "__main__":
     root_dir = "deploying/convert_tensorRT/"
     onnx_file_path = root_dir + "Best_LeNet_epoch_2.onnx"
     engine_file_path = root_dir + "Best_LeNet_epoch_2.trt"
+    input_shape = [1, 3, 224, 224]
 
-    get_engine(onnx_file_path, engine_file_path)
+    get_engine(onnx_file_path, input_shape, engine_file_path)

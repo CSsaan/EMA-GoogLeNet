@@ -12,7 +12,9 @@ from KeyPoint.model import create_DeepPose_model
 from dataLoader.WFLW import get_WFLW_dataloaders  # 加载WFLW数据集
 from benchmark.utils.config import load_model_parameters  # 加载模型参数配置
 from benchmark.DeepPose_losses import WingLoss, NMEMetric
-    
+
+use_amp = True  # 是否使用自动混合精度训练
+scaler = torch.amp.GradScaler("cuda" ,enabled=use_amp)
 
 def main(parameters_file_path):
     torch.manual_seed(1234)
@@ -40,7 +42,7 @@ def main(parameters_file_path):
     print(f"Using device: {device}")
 
     # 1. DataLoader (Flower5 数据集加载)
-    train_loader, val_loader, _trainset, _testset = get_WFLW_dataloaders(data_dir=dataset_path, input_size=input_size[0], batch_size=batch_size, num_workers=num_workers)
+    train_loader, val_loader, _trainset, _valset = get_WFLW_dataloaders(data_dir=dataset_path, input_size=input_size[0], batch_size=batch_size, num_workers=num_workers)
 
     # 2. Initialize model
     net = create_DeepPose_model(num_keypoints).to(device)
@@ -65,8 +67,9 @@ def main(parameters_file_path):
     scheduler = torch.optim.lr_scheduler.ChainedScheduler([warmup_scheduler, multi_step_scheduler])
 
     if resume:
-        assert os.path.exists(resume)
-        checkpoint = torch.load(resume, map_location='cpu')
+        if not os.path.exists(resume):
+            raise FileNotFoundError(f"Checkpoint file not found: {resume}")
+        checkpoint = torch.load(resume, map_location='cpu', weights_only=True)
         net.load_state_dict(checkpoint['net'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         scheduler.load_state_dict(checkpoint['scheduler'])
@@ -83,31 +86,21 @@ def main(parameters_file_path):
         wh_tensor = torch.as_tensor(input_size[::-1], dtype=torch.float32, device=device).reshape([1, 1, 2])
         running_loss = 0.0
         train_bar = tqdm(train_loader, desc='Training Progress')
-        for step, (inputs, targets) in enumerate(train_bar):
+        for _step, (inputs, targets) in enumerate(train_bar):
             inputs = inputs.to(device)
             labels = targets["keypoints"].to(device)
 
             # forward + backward + optimize
             optimizer.zero_grad()
-            # with torch.autocast(device_type=device.type): # use mixed precision to speed up training
-            pred: torch.Tensor = net(inputs)
-            loss: torch.Tensor = loss_function(pred.reshape((-1, num_keypoints, 2)), labels, wh_tensor)
-
-
-            # 进度条显示
-            postfix = {
-                'progress': '[{}/{}]'.format(epoch + 1, epochs),
-                'lr': '{:.6f}'.format(optimizer.param_groups[0]['lr']),
-                'loss': '{:.4f}'.format(loss)
-            }
-            train_bar.set_postfix(postfix)
-
-
-            if not math.isfinite(loss.item()):
-                print("Loss is {}, stopping training".format(loss.item()))
-                sys.exit(1)
-            loss.backward()
-            optimizer.step()
+            with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=use_amp):
+                pred: torch.Tensor = net(inputs)
+                loss: torch.Tensor = loss_function(pred.reshape((-1, num_keypoints, 2)), labels, wh_tensor)
+            # 反向传播和优化
+            # loss.backward()
+            # optimizer.step()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
 
             # sum up loss
             running_loss += loss.item()
@@ -119,31 +112,39 @@ def main(parameters_file_path):
                 'loss': '{:.4f}'.format(loss)
             }
             train_bar.set_postfix(postfix)   
+            if not math.isfinite(loss.item()):
+                print("Loss is {}, stopping training".format(loss.item()))
+                sys.exit(1)
+
         scheduler.step()
         print('[epoch %d] train_loss: %.3f' % (epoch + 1, running_loss / train_steps))
 
 
         # validate
         net.eval()
-        acc = 0.0  # accumulate accurate number / epoch
-        loss = 0.0
+        nme = 0.0  # accumulate accurate number / epoch
+        running_loss = 0.0
+        val_num = len(_valset)
         metric = NMEMetric(device=device)
         wh_tensor = torch.as_tensor(input_size[::-1], dtype=torch.float32, device=device).reshape([1, 1, 2])
         with torch.no_grad():
             val_bar = tqdm(val_loader, file=sys.stdout, desc='Validating Progress')
-            for step, (inputs, targets) in enumerate(val_bar):
+            for _step, (inputs, targets) in enumerate(val_bar):
                 inputs = inputs.to(device)
                 m_invs = targets["m_invs"].to(device)
                 labels = targets["ori_keypoints"].to(device)
 
                 pred = net(inputs)
+                running_loss += loss_function(pred.reshape((-1, num_keypoints, 2)), labels, wh_tensor)
+
                 pred = pred.reshape((-1, num_keypoints, 2))  # [N, K, 2]
                 pred = pred * wh_tensor  # rel coord to abs coord
                 pred = transforms.affine_points_torch(pred, m_invs)
                 metric.update(pred, labels) # sum up NME
 
+        val_loss = loss / val_num
         nme = metric.evaluate()
-        print(f"evaluation NME[{epoch}]: {nme:.3f}")
+        print(f"val_loss: {val_loss:.3f}, evaluation NME[{epoch}]: {nme:.3f}")
 
         # save weights
         save_files = {

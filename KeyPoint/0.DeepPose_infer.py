@@ -31,7 +31,8 @@ def main(args):
     ])
 
     # load image
-    assert os.path.exists(img_path), "file: '{}' dose not exist.".format(img_path)
+    if not os.path.exists(img_path):
+        raise FileNotFoundError(f"文件不存在: {img_path}")
     img = np.array(Image.open(img_path))
     h, w, c = img.shape
     target = {"box": [0, 0, w, h]}
@@ -43,8 +44,10 @@ def main(args):
     net = create_DeepPose_model(num_keypoints=num_keypoints).to(device)
 
     # load model weights
-    assert os.path.exists(weights_path), "file: '{}' dose not exist.".format(weights_path)
-    net.load_state_dict(torch.load(weights_path, weights_only=True)["net"])
+    if not os.path.exists(weights_path):
+        raise FileNotFoundError(f"模型权重文件不存在: {weights_path}")
+    net.load_state_dict(torch.load(weights_path, map_location="cpu", weights_only=True)["net"])
+
 
     # prediction
     net.eval()

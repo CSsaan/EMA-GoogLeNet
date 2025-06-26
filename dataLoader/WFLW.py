@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import torch
-import torchvision
 import torch.utils.data as data
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 import cv2
 import numpy as np
 from typing import List, Tuple
@@ -51,11 +50,13 @@ class WFLWDataset(data.Dataset):
     def __init__(self, root: str, train: bool = True, transforms=None):
         super().__init__()
         self.img_root = os.path.join(root, "WFLW_images")
-        assert os.path.exists(self.img_root), "path '{}' does not exist.".format(self.img_root)
+        if not os.path.exists(self.img_root):
+            raise FileNotFoundError(f"Path '{self.img_root}' does not exist.")
         
         ana_txt_name = "list_98pt_rect_attr_train.txt" if train else "list_98pt_rect_attr_test.txt"
         self.anno_path = os.path.join(root, "WFLW_annotations", "list_98pt_rect_attr_train_test", ana_txt_name)
-        assert os.path.exists(self.anno_path), "file '{}' does not exist.".format(self.anno_path)
+        if not os.path.exists(self.anno_path):
+            raise FileNotFoundError(f"File '{self.anno_path}' does not exist.")
 
         self.transforms = transforms
         self.keypoints: List[np.ndarray] = []
